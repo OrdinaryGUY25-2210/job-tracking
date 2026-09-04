@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #root { height: 100%; }
+  body {
+    @apply bg-paper text-ink font-body;
+    min-height: 100dvh;
+  }
+  input, select, textarea {
+    @apply outline-none;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center gap-2 bg-ink text-white rounded-xl px-4 py-2.5 text-sm font-semibold hover:opacity-90 transition-opacity;
+  }
+  .btn-ghost {
+    @apply text-inkSoft text-[13px] px-2 py-1.5 rounded-lg hover:bg-black/5 transition-colors;
+  }
+  .btn-secondary {
+    @apply flex-1 bg-surface border border-line text-ink rounded-lg px-3 py-2.5 text-[12.5px] font-semibold flex items-center justify-center gap-1.5 hover:bg-paper transition-colors;
+  }
+  .btn-ai {
+    @apply w-full bg-interview text-white rounded-xl py-3 text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-45 disabled:cursor-not-allowed hover:opacity-90 transition-opacity;
+  }
+  .card {
+    @apply bg-surface border border-line rounded-card;
+  }
+  .chip {
+    @apply px-3.5 py-2 rounded-[10px] text-xs font-medium bg-surface border border-line text-inkSoft transition-colors;
+  }
+  .chip.active {
+    @apply bg-ink text-white border-ink;
+  }
+  .nav-tab {
+    @apply px-4.5 py-2 rounded-[10px] text-[13.5px] font-semibold text-inkSoft transition-colors;
+  }
+  .nav-tab.active {
+    @apply bg-ink text-white;
+  }
+  .field label {
+    @apply block text-xs font-medium text-inkSoft mb-1.5;
+  }
+  .field input, .field select, .field textarea {
+    @apply w-full rounded-lg px-3 py-2.5 text-sm bg-paper border border-line text-ink;
+  }
+  .modal-overlay {
+    @apply fixed inset-0 bg-ink/35 flex items-center justify-center p-4 z-50;
+  }
+  .modal-card {
+    @apply bg-surface rounded-[20px] p-6 w-full max-w-[420px] shadow-2xl;
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+  }
+  .status-badge {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
+  }
+  .table-empty-state {
+    @apply py-16 flex flex-col items-center gap-3 text-inkSoft text-sm;
+  }
+  .upload-zone {
+    @apply border border-dashed border-line rounded-2xl p-6 text-center cursor-pointer transition-colors hover:border-submitted hover:bg-submittedBg;
+  }
+  .interview-panel {
+    @apply card flex flex-col;
+    height: 46vh;
+    min-height: 320px;
+  }
+  .interview-panel-head {
+    @apply flex items-center justify-between px-4.5 py-3.5 border-b border-lineSoft text-[13px] font-semibold;
+  }
+  .interview-panel-body {
+    @apply flex-1 overflow-y-auto px-4.5 py-4;
+  }
+  .rec-dot {
+    @apply w-2 h-2 rounded-full bg-line transition-colors relative;
+  }
+  .rec-dot.live {
+    @apply bg-rejected;
+    animation: recBlink 1s ease-in-out infinite;
+  }
+  .rec-dot.live::after {
+    content: '';
+    position: absolute; inset: 0;
+    @apply rounded-full bg-rejected;
+    animation: recPulse 1.4s ease-out infinite;
+  }
+}
+
+@keyframes recBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+@keyframes recPulse { 0% { transform: scale(1); opacity: 0.5; } 100% { transform: scale(2.4); opacity: 0; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideInLeft { from { transform: translateX(-16px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes slideInToast { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.spinner {
+  width: 15px; height: 15px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
