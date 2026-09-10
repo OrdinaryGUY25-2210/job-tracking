@@ -30,7 +30,7 @@ export default function ApplicationModal({ initial, onClose, onSave }) {
     if (!form.company.trim() || !form.position.trim()) return;
     onSave({
       ...form,
-      id: initial?.id,
+      ...(initial?.id ? { id: initial.id } : {}),
       link: form.link?.trim() || null,
       notes: form.notes?.trim() || null,
     });

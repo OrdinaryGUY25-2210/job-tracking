@@ -11,7 +11,7 @@ export function TargetModal({ initial, onClose, onSave }) {
   const submit = (e) => {
     e.preventDefault();
     if (!form.name.trim() || !form.target_amount) return;
-    onSave({ ...form, id: initial?.id, target_amount: Number(form.target_amount), deadline: form.deadline || null });
+    onSave({ ...form, ...(initial?.id ? { id: initial.id } : {}), target_amount: Number(form.target_amount), deadline: form.deadline || null });
   };
 
   return (

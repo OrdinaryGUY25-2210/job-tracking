@@ -14,7 +14,7 @@ export default function AccountModal({ initial, onClose, onSave }) {
     if (!form.bank_name.trim()) return;
     onSave({
       ...form,
-      id: initial?.id,
+      ...(initial?.id ? { id: initial.id } : {}),
       account_number: form.account_number?.trim() || null,
       account_holder: form.account_holder?.trim() || null,
       balance: Number(form.balance) || 0,

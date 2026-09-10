@@ -21,7 +21,7 @@ export default function ExpenseModal({ initial, accounts, onClose, onSave }) {
     if (!form.category || !form.amount) return;
     onSave({
       ...form,
-      id: initial?.id,
+      ...(initial?.id ? { id: initial.id } : {}),
       amount: Number(form.amount),
       note: form.note?.trim() || null,
       account_id: form.account_id || null,
