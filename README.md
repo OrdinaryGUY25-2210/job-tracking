@@ -77,12 +77,13 @@ Buka `http://localhost:5173`.
    - `VITE_SUPABASE_URL`
    - `VITE_SUPABASE_ANON_KEY`
 5. Klik **Deploy**.
-6. **Penting**: setelah dapat URL Vercel (mis. `https://nama-app.vercel.app`), tambahkan
-   URL itu ke:
-   - **Google Cloud Console** → OAuth Client → Authorized JavaScript origins & Authorized
-     redirect URIs (redirect URI tetap mengarah ke callback Supabase, origin yang baru
-     ditambahkan)
-   - **Supabase Dashboard** → Authentication → URL Configuration → Site URL & Redirect URLs
+6. **Login sekarang email + password (Supabase Auth native)** — tidak wajib setup Google
+   Cloud Console lagi. Kalau kamu masih migrasi dari versi lama yang pakai Google, baca
+   **PANDUAN-TRANSISI-LOGIN.md** dulu sebelum deploy.
+7. Aplikasi ini juga **PWA** (bisa di-install seperti aplikasi native) — begitu di-deploy
+   ke Vercel (butuh HTTPS, yang otomatis disediakan Vercel), tombol **"Install Aplikasi"**
+   akan muncul otomatis di Dashboard pada browser yang mendukung (Chrome/Edge di
+   desktop & Android; di iOS Safari, install lewat menu Share → Add to Home Screen).
 
 ## Catatan
 
@@ -91,3 +92,6 @@ Buka `http://localhost:5173`.
   dashboard Supabase (langkah 2 di atas).
 - File `.env` tidak pernah ikut ter-commit ke git (sudah ada di `.gitignore`) — isi
   environment variable production diatur lewat dashboard Vercel, bukan file `.env`.
+- Tombol "Masuk dengan Google (akun lama)" di layar login masih ada sementara, khusus
+  untuk migrasi akun lama — lihat **PANDUAN-TRANSISI-LOGIN.md** untuk cara menghapusnya
+  setelah migrasi selesai.

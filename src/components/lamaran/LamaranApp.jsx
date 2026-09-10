@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useApplications } from '../../hooks/useApplications';
 import StatsGrid from './StatsGrid';
+import InstallAppCard from './InstallAppCard';
 import Charts from './Charts';
 import ApplicationsTable from './ApplicationsTable';
 import ApplicationModal from './ApplicationModal';
@@ -94,6 +95,7 @@ export default function LamaranApp({ userId, profile, setProfile, showToast }) {
 
       {tab === 'dashboard' && (
         <div>
+          <InstallAppCard />
           <StatsGrid applications={applications} />
           <Charts applications={applications} />
           <ApplicationsTable

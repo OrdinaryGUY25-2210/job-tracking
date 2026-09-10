@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from './hooks/useAuth';
 import { useToast } from './hooks/useToast';
-import { supabase } from './lib/supabaseClient';
 import Login from './components/Login';
 import Sidebar from './components/Sidebar';
 import ToastContainer from './components/ToastContainer';
+import AccountMigrationBanner from './components/AccountMigrationBanner';
 import LamaranApp from './components/lamaran/LamaranApp';
 import InterviewApp from './components/interview/InterviewApp';
 import FinanceApp from './components/finance/FinanceApp';
@@ -16,11 +16,12 @@ const APP_META = {
 };
 
 export default function App() {
-  const { user, loading, loginWithGoogle, logout } = useAuth();
+  const { user, loading, signInWithPassword, signUpWithPassword, resetPassword, loginWithGoogle, logout } = useAuth();
   const { toasts, showToast, closeToast } = useToast();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeApp, setActiveApp] = useState('lamaran');
   const [profile, setProfile] = useState(null);
+  const [bannerTick, setBannerTick] = useState(0);
 
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && setSidebarOpen(false);
@@ -29,7 +30,9 @@ export default function App() {
   }, []);
 
   if (loading) return null;
-  if (!user) return <Login onLogin={loginWithGoogle} />;
+  if (!user) {
+    return <Login onSignIn={signInWithPassword} onSignUp={signUpWithPassword} onResetPassword={resetPassword} onGoogleLogin={loginWithGoogle} />;
+  }
 
   const meta = APP_META[activeApp];
 
@@ -71,6 +74,8 @@ export default function App() {
           setSidebarOpen(false);
         }}
       />
+
+      <AccountMigrationBanner key={bannerTick} user={user} onDone={() => setBannerTick((t) => t + 1)} />
 
       {activeApp === 'lamaran' && <LamaranApp userId={user.id} profile={profile} setProfile={setProfile} showToast={showToast} />}
       {activeApp === 'interview' && <InterviewApp />}
