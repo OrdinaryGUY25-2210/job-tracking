@@ -8,6 +8,7 @@ import AccountMigrationBanner from './components/AccountMigrationBanner';
 import LamaranApp from './components/lamaran/LamaranApp';
 import InterviewApp from './components/interview/InterviewApp';
 import FinanceApp from './components/finance/FinanceApp';
+import InstallButton from './components/InstallButton';
 
 const APP_META = {
   lamaran: { title: 'Lacak Lamaran', subtitle: 'Pengganti spreadsheet untuk memantau proses lamaran kerjamu.' },
@@ -15,13 +16,46 @@ const APP_META = {
   finance: { title: 'Keuangan', subtitle: 'Lacak pengeluaran, rekening, dan target tabunganmu di satu tempat.' },
 };
 
+// Route <-> tab mapping. Ini yang bikin refresh di /interview atau /finance
+// tetap di halaman yang sama, bukan selalu balik ke dashboard.
+const PATH_TO_APP = { '/interview': 'interview', '/finance': 'finance', '/lamaran': 'lamaran' };
+const APP_TO_PATH = { lamaran: '/lamaran', interview: '/interview', finance: '/finance' };
+
+function getAppFromPath(pathname) {
+  return PATH_TO_APP[pathname] || 'lamaran';
+}
+
 export default function App() {
   const { user, loading, signInWithPassword, signUpWithPassword, resetPassword, loginWithGoogle, logout } = useAuth();
   const { toasts, showToast, closeToast } = useToast();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeApp, setActiveApp] = useState('lamaran');
+  const [activeApp, setActiveAppState] = useState(() => getAppFromPath(window.location.pathname));
   const [profile, setProfile] = useState(null);
   const [bannerTick, setBannerTick] = useState(0);
+
+  // Ganti tab + update URL (pakai pushState, bukan reload) supaya alamatnya
+  // ikut berubah dan tetap bisa di-refresh / di-bookmark / tombol back browser jalan normal.
+  const setActiveApp = (app) => {
+    setActiveAppState(app);
+    const path = APP_TO_PATH[app] || '/lamaran';
+    if (window.location.pathname !== path) {
+      window.history.pushState({ app }, '', path);
+    }
+  };
+
+  useEffect(() => {
+    // Normalisasi URL awal: kalau dibuka dari "/" (mis. shortcut PWA), arahkan ke "/lamaran"
+    // tanpa reload, supaya path & activeApp selalu sinkron sejak awal.
+    const initialApp = getAppFromPath(window.location.pathname);
+    const initialPath = APP_TO_PATH[initialApp];
+    if (window.location.pathname !== initialPath) {
+      window.history.replaceState({ app: initialApp }, '', initialPath);
+    }
+
+    const onPopState = () => setActiveAppState(getAppFromPath(window.location.pathname));
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
 
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && setSidebarOpen(false);
@@ -59,6 +93,7 @@ export default function App() {
             />
             <span className="truncate max-w-[160px]">{user.email}</span>
           </div>
+          <InstallButton />
           <button onClick={logout} className="btn-ghost">
             Keluar
           </button>

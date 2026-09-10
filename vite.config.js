@@ -25,6 +25,10 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
+        // Semua route (/, /interview, /finance) harus jatuh balik ke index.html
+        // supaya refresh atau buka langsung ke URL itu tetap jalan sebagai app
+        // React, termasuk saat sudah ter-install (mode standalone) dan offline.
+        navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/supabase\//],
       },
     }),

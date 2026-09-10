@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { EXPENSE_CATEGORIES } from '../../lib/finance';
 import { todayISO } from '../../lib/constants';
+import CurrencyInput from './CurrencyInput';
 
 export default function ExpenseModal({ initial, accounts, onClose, onSave }) {
   const isEdit = !!initial;
@@ -50,8 +51,8 @@ export default function ExpenseModal({ initial, accounts, onClose, onSave }) {
             </select>
           </div>
           <div className="field">
-            <label>Nominal (Rp)</label>
-            <input type="number" min="0" step="1000" required value={form.amount} onChange={set('amount')} placeholder="0" />
+            <label>Nominal</label>
+            <CurrencyInput required value={form.amount} onChange={(v) => setForm((f) => ({ ...f, amount: v }))} />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">

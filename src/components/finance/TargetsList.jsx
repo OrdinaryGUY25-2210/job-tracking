@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { formatRupiah } from '../../lib/finance';
 import { fmtDate } from '../../lib/constants';
 import { IconTarget, IconTray } from '../icons/Icons';
+import CurrencyInput from './CurrencyInput';
 
 export function TargetModal({ initial, onClose, onSave }) {
   const isEdit = !!initial;
@@ -28,8 +29,8 @@ export function TargetModal({ initial, onClose, onSave }) {
           <input required value={form.name} onChange={set('name')} placeholder="cth. Dana Darurat, DP Rumah" />
         </div>
         <div className="field">
-          <label>Nominal Target (Rp)</label>
-          <input type="number" min="0" step="10000" required value={form.target_amount} onChange={set('target_amount')} />
+          <label>Nominal Target</label>
+          <CurrencyInput required value={form.target_amount} onChange={(v) => setForm((f) => ({ ...f, target_amount: v }))} />
         </div>
         <div className="field">
           <label>Tenggat (opsional)</label>

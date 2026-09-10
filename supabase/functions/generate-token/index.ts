@@ -1,9 +1,15 @@
 // ============================================================
 //  Edge Function: generate-token
 //  Menghasilkan token sementara AssemblyAI agar API key aslinya tidak
-//  pernah dikirim ke browser. Dipanggil dari index.html lewat:
+//  pernah dikirim ke browser. Dipanggil dari useLiveTranscription.js lewat:
 //    supabaseClient.functions.invoke("generate-token")
 //  sebelum membuka koneksi WebSocket transkripsi live.
+//
+//  CATATAN MIGRASI (Sep 2026): AssemblyAI mematikan Streaming v2 lama
+//  (/v2/realtime/token + wss://api.assemblyai.com/v2/realtime/ws) per
+//  31 Jan 2026 — itulah sumber error "Terjadi masalah dengan koneksi
+//  audio/transkripsi" di Interview Assistant. Function ini sekarang
+//  memanggil endpoint token Streaming v3 yang baru.
 // ============================================================
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
@@ -28,10 +34,12 @@ serve(async (req: Request) => {
       );
     }
 
-    const response = await fetch("https://api.assemblyai.com/v2/realtime/token", {
-      method: "POST",
-      headers: { "authorization": apiKey, "content-type": "application/json" },
-      body: JSON.stringify({ expires_in: 3600 }),
+    // Token v3: GET /v3/token dengan Authorization: <apiKey> (bukan lagi POST /v2/realtime/token).
+    // expires_in_seconds cuma jendela waktu untuk MEMBUKA koneksi WS (maks 600 detik),
+    // bukan durasi sesi — begitu WS terbuka, sesi jalan sampai 3 jam (default).
+    const response = await fetch("https://streaming.assemblyai.com/v3/token?expires_in_seconds=60", {
+      method: "GET",
+      headers: { authorization: apiKey },
     });
 
     if (!response.ok) {

@@ -1,9 +1,18 @@
 import { useCallback, useRef, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
-// AssemblyAI realtime membutuhkan PCM16 mono 16kHz, bukan webm/opus.
+// AssemblyAI Streaming v3 butuh PCM16 mono 16kHz, bukan webm/opus.
 // Karena itu kita pakai Web Audio API (AudioContext + ScriptProcessorNode)
 // untuk mengambil sample mentah, lalu convert ke Int16 sebelum dikirim.
+//
+// CATATAN MIGRASI (Sep 2026): sebelumnya hook ini memakai AssemblyAI
+// Streaming v2 (wss://api.assemblyai.com/v2/realtime/ws), yang resmi
+// dimatikan AssemblyAI per 31 Jan 2026. Itulah penyebab pesan
+// "Terjadi masalah dengan koneksi audio/transkripsi" yang selalu muncul.
+// Hook ini sekarang memakai Streaming v3 (wss://streaming.assemblyai.com/v3/ws),
+// yang juga beda cara kirim audio (binary mentah, bukan JSON+base64) dan
+// beda format pesan transkrip (satu tipe "Turn" dengan flag end_of_turn,
+// bukan PartialTranscript/FinalTranscript terpisah seperti v2).
 
 const TARGET_SAMPLE_RATE = 16000;
 
@@ -40,16 +49,6 @@ function downsampleBuffer(buffer, inputSampleRate, targetSampleRate) {
   return result;
 }
 
-function arrayBufferToBase64(buffer) {
-  let binary = '';
-  const bytes = new Uint8Array(buffer);
-  const chunkSize = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
-  }
-  return btoa(binary);
-}
-
 export function useLiveTranscription({ onFinalTranscript, onPartialTranscript, onError }) {
   const [isRecording, setIsRecording] = useState(false);
   const [status, setStatus] = useState('idle'); // idle | connecting | listening | error
@@ -67,7 +66,7 @@ export function useLiveTranscription({ onFinalTranscript, onPartialTranscript, o
     streamRef.current?.getTracks().forEach((track) => track.stop());
 
     if (socketRef.current?.readyState === WebSocket.OPEN) {
-      socketRef.current.send(JSON.stringify({ terminate_session: true }));
+      socketRef.current.send(JSON.stringify({ type: 'Terminate' }));
       socketRef.current.close();
     }
 
@@ -88,7 +87,7 @@ export function useLiveTranscription({ onFinalTranscript, onPartialTranscript, o
       // 1. Ambil token sementara dari Supabase Edge Function (bukan API key langsung)
       const { data, error } = await supabase.functions.invoke('generate-token');
       if (error || !data?.token) {
-        throw new Error(error?.message || 'Gagal mengambil token AssemblyAI');
+        throw new Error(error?.message || data?.error || 'Gagal mengambil token AssemblyAI');
       }
 
       // 2. Buka koneksi mic
@@ -106,28 +105,32 @@ export function useLiveTranscription({ onFinalTranscript, onPartialTranscript, o
       const processor = audioContext.createScriptProcessor(4096, 1, 1);
       processorRef.current = processor;
 
-      // 3. Buka WebSocket ke AssemblyAI realtime endpoint
-      const socket = new WebSocket(
-        `wss://api.assemblyai.com/v2/realtime/ws?sample_rate=${TARGET_SAMPLE_RATE}&token=${data.token}`
-      );
+      // 3. Buka WebSocket ke AssemblyAI Streaming v3.
+      //    speech_model=universal-streaming-multilingual dipilih supaya satu
+      //    koneksi jalan baik untuk sesi Bahasa Indonesia maupun Inggris
+      //    (toggle ID/EN di UI cuma mengganti bahasa prompt AI, bukan model STT).
+      const params = new URLSearchParams({
+        sample_rate: String(TARGET_SAMPLE_RATE),
+        encoding: 'pcm_s16le',
+        format_turns: 'true',
+        speech_model: 'universal-streaming-multilingual',
+        token: data.token,
+      });
+      const socket = new WebSocket(`wss://streaming.assemblyai.com/v3/ws?${params.toString()}`);
       socketRef.current = socket;
 
       socket.onopen = () => {
-        setStatus('listening');
-        setIsRecording(true);
-
+        // Status "listening" beneran dipasang setelah pesan "Begin" dari server
+        // (lihat onmessage) supaya nggak keburu ijo padahal sesi belum resmi jalan.
         processor.onaudioprocess = (event) => {
           const inputData = event.inputBuffer.getChannelData(0);
-          const downsampled = downsampleBuffer(
-            inputData,
-            audioContext.sampleRate,
-            TARGET_SAMPLE_RATE
-          );
+          const downsampled = downsampleBuffer(inputData, audioContext.sampleRate, TARGET_SAMPLE_RATE);
           const pcm16 = floatTo16BitPCM(downsampled);
-          const base64Audio = arrayBufferToBase64(pcm16);
 
+          // v3 menerima audio sebagai binary WebSocket frame mentah,
+          // BUKAN dibungkus JSON + base64 seperti v2.
           if (socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify({ audio_data: base64Audio }));
+            socket.send(pcm16);
           }
         };
 
@@ -137,13 +140,21 @@ export function useLiveTranscription({ onFinalTranscript, onPartialTranscript, o
 
       socket.onmessage = (message) => {
         const res = JSON.parse(message.data);
-        if (res.message_type === 'PartialTranscript' && res.text) {
-          onPartialTranscript?.(res.text);
+
+        if (res.type === 'Begin') {
+          setStatus('listening');
+          setIsRecording(true);
         }
-        if (res.message_type === 'FinalTranscript' && res.text) {
-          onFinalTranscript?.(res.text);
+
+        if (res.type === 'Turn' && typeof res.transcript === 'string' && res.transcript.trim()) {
+          if (res.end_of_turn) {
+            onFinalTranscript?.(res.transcript);
+          } else {
+            onPartialTranscript?.(res.transcript);
+          }
         }
-        if (res.message_type === 'SessionTerminated') {
+
+        if (res.type === 'Termination') {
           stop();
         }
       };

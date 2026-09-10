@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { BANK_PRESETS, bankColor } from '../../lib/finance';
+import CurrencyInput from './CurrencyInput';
 
 export default function AccountModal({ initial, onClose, onSave }) {
   const isEdit = !!initial;
@@ -56,8 +57,8 @@ export default function AccountModal({ initial, onClose, onSave }) {
           <input value={form.account_holder || ''} onChange={set('account_holder')} />
         </div>
         <div className="field">
-          <label>Saldo Saat Ini (Rp)</label>
-          <input type="number" min="0" step="1000" required value={form.balance} onChange={set('balance')} placeholder="0" />
+          <label>Saldo Saat Ini</label>
+          <CurrencyInput required value={form.balance} onChange={(v) => setForm((f) => ({ ...f, balance: v }))} />
         </div>
 
         <div className="flex gap-2.5 mt-6">
