@@ -13,7 +13,7 @@ import { useNotifications } from './hooks/useNotifications';
 import { useToast } from './hooks/useToast';
 
 export default function App() {
-  const { user, loading, logout } = useAuth();
+  const { user, loading, signInWithPassword, signUpWithPassword, resetPassword, loginWithGoogle, logout } = useAuth();
   const { account } = useAccount(user);
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications(user);
   const { toasts, showToast, closeToast } = useToast();
@@ -31,7 +31,14 @@ export default function App() {
   }
 
   if (!user) {
-    return <Login />;
+    return (
+      <Login
+        onSignIn={signInWithPassword}
+        onSignUp={signUpWithPassword}
+        onResetPassword={resetPassword}
+        onGoogleLogin={loginWithGoogle}
+      />
+    );
   }
 
   const isAdmin = !!account?.is_admin;

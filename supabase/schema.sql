@@ -303,6 +303,20 @@ create policy "Pengguna kelola target miliknya"
 --  Beda dari "finance_targets": ini kalkulator alokasi berbasis
 --  persentase penghasilan, bukan target tabungan per item.
 -- ============================================================
+
+-- Didefinisikan ulang (create or replace, aman walau sudah ada) supaya
+-- section ini bisa dijalankan berdiri sendiri tanpa run seluruh
+-- schema.sql dari atas dulu.
+create or replace function public.set_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
 create table if not exists public.finance_allocations (
   user_id         uuid primary key default auth.uid() references auth.users(id) on delete cascade,
   total_income    numeric not null default 0,
@@ -378,14 +392,32 @@ create table if not exists public.profiles (
   id                 uuid primary key references auth.users(id) on delete cascade,
   full_name          text,
   email              text,
-  subscription_tier  text not null default 'free'
-                        check (subscription_tier in ('free', 'pro', 'supreme')),
-  status             text not null default 'aktif'
-                        check (status in ('aktif', 'nonaktif', 'suspended')),
-  is_admin           boolean not null default false,
   created_at         timestamptz not null default now(),
   updated_at         timestamptz not null default now()
 );
+
+-- Ditambahkan lewat ALTER (bukan langsung di CREATE TABLE) supaya kolom ini
+-- tetap ditambahkan walau tabel "profiles" sudah kadung ada duluan di
+-- database-mu dari run sebelumnya (CREATE TABLE IF NOT EXISTS mengabaikan
+-- kolom baru kalau tabelnya sudah ada). Aman dijalankan berkali-kali.
+alter table public.profiles add column if not exists subscription_tier text not null default 'free';
+alter table public.profiles add column if not exists status text not null default 'aktif';
+alter table public.profiles add column if not exists is_admin boolean not null default false;
+
+-- Pasang batasan nilai (check constraint) belakangan, terpisah dari ALTER
+-- ADD COLUMN — supaya tidak error kalau constraint dengan nama itu ternyata
+-- sudah pernah dibuat sebelumnya di database-mu.
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'profiles_subscription_tier_check') then
+    alter table public.profiles add constraint profiles_subscription_tier_check
+      check (subscription_tier in ('free', 'pro', 'supreme'));
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'profiles_status_check') then
+    alter table public.profiles add constraint profiles_status_check
+      check (status in ('aktif', 'nonaktif', 'suspended'));
+  end if;
+end $$;
 
 create index if not exists profiles_subscription_tier_idx on public.profiles (subscription_tier);
 create index if not exists profiles_created_at_idx on public.profiles (created_at desc);
