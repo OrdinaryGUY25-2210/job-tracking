@@ -6,6 +6,7 @@ import ExpensesList from './ExpensesList';
 import ExpenseModal from './ExpenseModal';
 import FinanceCharts from './FinanceCharts';
 import TargetsList, { TargetModal } from './TargetsList';
+import AllocationApp from './AllocationApp';
 import ConfirmModal from './ConfirmModal';
 
 const TABS = [
@@ -13,6 +14,7 @@ const TABS = [
   { key: 'accounts', label: 'Rekening' },
   { key: 'expenses', label: 'Pengeluaran' },
   { key: 'targets', label: 'Target' },
+  { key: 'allocation', label: 'Alokasi Pengeluaran' },
 ];
 
 export default function FinanceApp({ userId, showToast }) {
@@ -108,6 +110,8 @@ export default function FinanceApp({ userId, showToast }) {
       {tab === 'targets' && (
         <TargetsList targets={targets} totalBalance={totalBalance} onAdd={() => setTargetModal(null)} onEdit={(t) => setTargetModal(t)} onDelete={(t) => setConfirmDelete({ type: 'target', item: t })} />
       )}
+
+      {tab === 'allocation' && <AllocationApp userId={userId} showToast={showToast} />}
 
       {accountModal !== undefined && <AccountModal initial={accountModal} onClose={() => setAccountModal(undefined)} onSave={saveAccount} />}
       {expenseModal !== undefined && <ExpenseModal initial={expenseModal} accounts={accounts} onClose={() => setExpenseModal(undefined)} onSave={saveExpense} />}

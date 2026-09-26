@@ -9,9 +9,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['apple-touch-icon.png'],
       manifest: {
-        name: 'Lacak Lamaran',
-        short_name: 'Lacak Lamaran',
-        description: 'Pelacak lamaran kerja, keuangan, dan asisten interview AI.',
+        name: 'Cortex',
+        short_name: 'Cortex',
+        description: 'Cortex — pelacak lamaran kerja, keuangan, dan asisten interview AI.',
         theme_color: '#1F2A44',
         background_color: '#F2F4F7',
         display: 'standalone',

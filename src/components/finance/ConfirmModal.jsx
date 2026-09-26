@@ -1,6 +1,6 @@
 import { IconTrashFlat } from '../icons/Icons';
 
-export default function ConfirmModal({ title, description, onCancel, onConfirm }) {
+export default function ConfirmModal({ title, description, onCancel, onConfirm, confirmLabel = 'Hapus' }) {
   return (
     <div className="modal-overlay" onMouseDown={(e) => e.target === e.currentTarget && onCancel()}>
       <div className="modal-card max-w-[360px] text-center">
@@ -14,7 +14,7 @@ export default function ConfirmModal({ title, description, onCancel, onConfirm }
             Batal
           </button>
           <button onClick={onConfirm} className="flex-1 rounded-lg py-2.5 text-sm font-semibold text-white bg-rejected">
-            Hapus
+            {confirmLabel}
           </button>
         </div>
       </div>

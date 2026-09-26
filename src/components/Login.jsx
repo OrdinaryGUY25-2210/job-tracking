@@ -41,12 +41,8 @@ export default function Login({ onSignIn, onSignUp, onResetPassword, onGoogleLog
       style={{ paddingTop: 'max(20px, env(safe-area-inset-top))', paddingBottom: 'max(20px, env(safe-area-inset-bottom))' }}
     >
       <div className="bg-surface border border-line rounded-[20px] p-10 max-w-[380px] w-full">
-        <svg className="mx-auto mb-4.5 block" width="56" height="56" viewBox="0 0 32 32" fill="none">
-          <rect x="4" y="9" width="24" height="17" rx="3" fill="#1F2A44" opacity="0.14" />
-          <path d="M5 9.5A2.5 2.5 0 0 1 7.5 7h17A2.5 2.5 0 0 1 27 9.5V15h-6.2a1 1 0 0 0-.85.47l-1.1 1.75a1 1 0 0 1-.85.48h-4a1 1 0 0 1-.85-.48l-1.1-1.75A1 1 0 0 0 11.2 15H5V9.5Z" fill="#1F2A44" />
-          <rect x="5" y="15" width="22" height="10.5" rx="2.4" fill="#1F2A44" opacity="0.9" />
-        </svg>
-        <h1 className="font-display text-[22px] font-bold mb-2 text-center">Lacak Lamaran</h1>
+        <img src="/icon-192.png" alt="Cortex" className="mx-auto mb-4.5 block w-14 h-14 rounded-[14px]" />
+        <h1 className="font-display text-[22px] font-bold mb-2 text-center">Cortex</h1>
         <p className="text-inkSoft text-sm mb-6 text-center leading-relaxed">
           {mode === 'signin' && 'Masuk untuk mulai memantau lamaran, keuangan, dan Interview Assistant-mu.'}
           {mode === 'signup' && 'Buat akun baru dengan email dan password.'}
