@@ -67,20 +67,26 @@ export default function LamaranApp({ userId, profile, setProfile, showToast }) {
 
   return (
     <div className="app-section" style={{ animation: 'fadeIn 0.15s ease' }}>
-      <div className="flex gap-2.5 flex-wrap justify-end mb-5">
-        <button onClick={() => setAiTailorPrefill(null)} className="btn-primary" style={{ background: '#6B5FA3' }}>
-          <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-            <path d="M8 1.5l1.4 3.4L13 6.2l-3.6 1.3L8 11l-1.4-3.5L3 6.2l3.6-1.3L8 1.5Z" fill="white" />
-            <path d="M13 10l.7 1.7L15.5 12.4l-1.8.7L13 15l-.7-1.9-1.8-.7 1.8-.7L13 10Z" fill="white" />
-          </svg>
-          Tailor CV dengan AI
-        </button>
-        <button onClick={() => setModalApp(null)} className="btn-primary">
-          <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-            <path d="M7.5 2v11M2 7.5h11" stroke="white" strokeWidth="1.7" strokeLinecap="round" />
-          </svg>
-          Tambah Lamaran
-        </button>
+      <div className="flex items-center gap-3 flex-wrap justify-between mb-5">
+        <div>
+          <h1 className="font-display text-xl font-bold text-ink">Lacak Lamaran</h1>
+          <p className="text-xs text-inkSoft mt-0.5">Pantau progres semua lamaran kerjamu di satu tempat.</p>
+        </div>
+        <div className="flex gap-2.5 flex-wrap">
+          <button onClick={() => setAiTailorPrefill(null)} className="btn-primary" style={{ background: '#6B5FA3' }}>
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+              <path d="M8 1.5l1.4 3.4L13 6.2l-3.6 1.3L8 11l-1.4-3.5L3 6.2l3.6-1.3L8 1.5Z" fill="white" />
+              <path d="M13 10l.7 1.7L15.5 12.4l-1.8.7L13 15l-.7-1.9-1.8-.7 1.8-.7L13 10Z" fill="white" />
+            </svg>
+            Tailor CV dengan AI
+          </button>
+          <button onClick={() => setModalApp(null)} className="btn-primary">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+              <path d="M7.5 2v11M2 7.5h11" stroke="white" strokeWidth="1.7" strokeLinecap="round" />
+            </svg>
+            Tambah Lamaran
+          </button>
+        </div>
       </div>
 
       {storageError && <div className="mb-5 text-xs rounded-lg px-3 py-2 bg-rejectedBg text-rejected">{storageError}</div>}

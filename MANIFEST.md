@@ -1,52 +1,29 @@
-# Manifest File Update — Cortex
+# Manifest Update — Chart caPOS + Perbaikan Layout
 
-Isi zip ini **hanya** file yang baru dibuat atau diubah sepanjang percakapan ini (bukan seluruh project).
-Struktur folder di dalam zip ini **sama persis** dengan struktur project-mu — tinggal copy-timpa (overwrite)
-ke lokasi yang sama di project aslimu.
+## ⚠️ PALING PENTING — penyebab error build kamu
 
-## Cara pakai
-1. Ekstrak zip ini.
-2. Copy seluruh isinya ke root folder project `job-tracking-main` kamu, timpa file yang sudah ada.
-3. Hapus manual 1 file basi yang **tidak** ada di zip ini (lihat bagian "Perlu dihapus manual" di bawah).
-4. Jalankan bagian baru di `supabase/schema.sql` (lihat bawah) di SQL Editor Supabase.
-5. Commit & push → Vercel redeploy otomatis.
+**`package.json` dan `package-lock.json` HARUS ikut ditimpa.** Error
+`Rollup failed to resolve import "recharts"` terjadi karena kedua file ini
+belum ikut ter-update di repo kamu — `CaposApp.jsx` sudah `import` dari
+`recharts`, tapi Vercel tidak tahu harus install library itu karena tidak
+terdaftar di `package.json`. Timpa **kedua file ini**, jangan cuma file
+`.jsx`-nya saja.
 
----
+## Semua file di zip ini
 
-## File BARU (belum ada sebelumnya)
-
-| Lokasi | Isi |
+| Lokasi | Kenapa berubah |
 |---|---|
-| `public/favicon-32.png` | Favicon 32×32 dari logo Cortex |
-| `src/assets/logo.png` | Logo Cortex versi 128×128 (untuk dipakai di dalam UI kalau perlu) |
-| `src/components/Topbar.jsx` | Navbar atas: logo, hamburger, install button, bel notifikasi, menu akun |
-| `src/components/AccountMenu.jsx` | Dropdown akun (avatar, nama, email, badge paket, tombol Keluar) |
-| `src/components/NotificationBell.jsx` | Bel notifikasi + dropdown daftar notifikasi |
-| `src/components/finance/AllocationApp.jsx` | Fitur "Alokasi Pengeluaran" (Berapa yang Boleh Dipakai?) |
-| `src/hooks/useAccount.js` | Ambil data akun (nama, tier, is_admin) dari tabel `profiles` |
-| `src/hooks/useNotifications.js` | Ambil & kelola notifikasi (realtime, tandai dibaca) |
-| `src/hooks/useAllocation.js` | Logika fitur Alokasi Pengeluaran (load/simpan/reset) |
+| `package.json` | Tambah dependency `recharts` (chart library) |
+| `package-lock.json` | Ikut update — dibutuhkan `npm ci` di Vercel supaya versi persis sama |
+| `vite.config.js` | Split bundle besar (`recharts`, `pdfjs-dist`, `docx`+`mammoth`) jadi chunk terpisah + naikkan batas cache PWA |
+| `src/lib/capos.js` | Tambah fungsi `buildSignupTrend` untuk data grafik trafik |
+| `src/components/capos/CaposApp.jsx` | Tambah Bar Chart (perbandingan tier) + Area Chart (trafik pendaftaran 14 hari) |
+| `src/index.css` | **Definisikan `.app-section`** (sebelumnya tidak ada!) — bikin semua halaman lebar 90%, tidak mepet kiri-kanan |
+| `src/components/Topbar.jsx` | Selaraskan lebar navbar dengan 90% yang sama |
+| `src/components/lamaran/LamaranApp.jsx` | Header dipisah: judul di kiri, tombol aksi di kanan |
 
-## File DIUBAH (sudah ada, isinya diganti)
+## Setelah copy-timpa
 
-| Lokasi | Perubahan |
-|---|---|
-| `index.html` | Judul → "Cortex", favicon & apple-touch-icon baru |
-| `vite.config.js` | Manifest PWA: nama app → "Cortex" |
-| `package.json` | Nama project → "cortex", tambah dependency `lucide-react` |
-| `package-lock.json` | Ikut update karena `lucide-react` ditambahkan (penting untuk `npm ci` di Vercel) |
-| `public/icon-192.png`, `icon-512.png`, `icon-maskable-512.png`, `apple-touch-icon.png` | Diganti pakai logo yang kamu kirim |
-| `src/App.jsx` | Ditulis ulang: Topbar + Sidebar disatukan dengan benar, props `userId`/`showToast`/`profile` dioper ke `LamaranApp`/`FinanceApp`, props `onSignIn` dkk dioper ke `Login`, gating admin untuk tab caPOS |
-| `src/components/Login.jsx` | Logo & nama app → Cortex |
-| `src/components/Sidebar.jsx` | Tambah logo Cortex di header sidebar, item menu "caPOS Analytics" (khusus admin) |
-| `src/components/finance/ConfirmModal.jsx` | Tambah prop `confirmLabel` (dipakai untuk tombol "Reset" di Alokasi Pengeluaran) |
-| `src/components/finance/FinanceApp.jsx` | Tambah tab "Alokasi Pengeluaran" |
-| `supabase/schema.sql` | Tambah tabel `notifications`, `finance_allocations`, `finance_allocation_items` + perbaikan urutan fungsi & `alter table` pengaman untuk `profiles` |
-
-## Perlu dihapus manual (tidak ada gantinya di zip ini)
-
-- **`Sidebar.jsx` di root folder project** (bukan yang di `src/components/`) — ini file duplikat nyasar yang tidak pernah dipakai kode manapun, aman dihapus.
-
-## Bagian schema.sql yang perlu dijalankan
-
-Kalau kamu sudah pernah menjalankan `schema.sql` versi sebelumnya, **jalankan ulang seluruh file dari atas sampai bawah** (aman, semua statement idempotent) — supaya semua perbaikan urutan fungsi dan `alter table` pengaman ikut ter-apply, tidak cuma bagian yang kelihatan baru.
+1. Commit & push semua 8 file ini.
+2. Redeploy di Vercel (biasanya otomatis kalau sudah terhubung ke Git).
+3. Kalau masih error `recharts`/`lucide-react` not resolved lagi setelah ini, kemungkinan besar `package.json` yang ke-push ke repo masih bukan yang dari zip ini — cek isi file itu langsung di GitHub, pastikan ada baris `"recharts"` di dalamnya.

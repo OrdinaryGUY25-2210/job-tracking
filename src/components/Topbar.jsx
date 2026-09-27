@@ -5,9 +5,10 @@ import AccountMenu from './AccountMenu';
 export default function Topbar({ onOpenSidebar, user, account, onLogout, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead }) {
   return (
     <header
-      className="sticky top-0 z-[60] bg-surface border-b border-line flex items-center justify-between px-4 sm:px-6 gap-3"
-      style={{ height: 60, paddingTop: 'env(safe-area-inset-top, 0px)' }}
+      className="sticky top-0 z-[60] bg-surface border-b border-line"
+      style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
     >
+      <div className="app-container-x flex items-center justify-between gap-3" style={{ height: 60 }}>
       <div className="flex items-center gap-2.5 min-w-0">
         <button
           onClick={onOpenSidebar}
@@ -31,6 +32,7 @@ export default function Topbar({ onOpenSidebar, user, account, onLogout, notific
           onMarkAllAsRead={onMarkAllAsRead}
         />
         <AccountMenu user={user} account={account} onLogout={onLogout} />
+      </div>
       </div>
     </header>
   );
