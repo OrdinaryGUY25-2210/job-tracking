@@ -25,10 +25,6 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
-        // Bundle sudah lewat 2 MB (chart & pengolah dokumen), naikkan batas
-        // precache PWA-nya supaya tidak gagal build — bukan tanda ada yang
-        // salah, cuma limit default Workbox yang perlu disesuaikan.
-        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         // Semua route (/, /interview, /finance) harus jatuh balik ke index.html
         // supaya refresh atau buka langsung ke URL itu tetap jalan sebagai app
         // React, termasuk saat sudah ter-install (mode standalone) dan offline.
@@ -37,20 +33,5 @@ export default defineConfig({
       },
     }),
   ],
-  build: {
-    rollupOptions: {
-      output: {
-        // Pisah library berat jadi chunk sendiri-sendiri supaya bundle utama
-        // tidak membengkak jadi satu file raksasa, dan supaya browser bisa
-        // cache tiap library terpisah (tidak perlu unduh ulang semua kalau
-        // cuma kode aplikasi yang berubah).
-        manualChunks: {
-          recharts: ['recharts'],
-          pdfjs: ['pdfjs-dist'],
-          docx: ['docx', 'mammoth'],
-        },
-      },
-    },
-  },
   server: { port: 5173 },
 });

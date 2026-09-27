@@ -1,105 +1,45 @@
-import React, { useState, useEffect } from 'react';
-import { Briefcase, Wallet, Bot, LogOut, ChevronRight, Zap } from 'lucide-react';
-import { supabase } from '../lib/supabaseClient';
+import { IconTray, IconInterview, IconWallet } from './icons/Icons';
 
-export default function Sidebar({ activeTab, setActiveTab, onLogout, user }) {
-  const [hasCaposUnread, setHasCaposUnread] = useState(false);
+export default function Sidebar({ open, onClose, activeApp, onSelect, isAdmin }) {
+  if (!open) return null;
 
-  useEffect(() => {
-    async function checkCaposUnread() {
-      try {
-        const { data } = await supabase
-          .from('capos_activity_logs')
-          .select('id')
-          .eq('is_read', false)
-          .limit(1);
-
-        if (data && data.length > 0) {
-          setHasCaposUnread(true);
-        }
-      } catch (e) {
-        // Abaikan jika tabel belum di-migrate
-      }
-    }
-    checkCaposUnread();
-  }, [activeTab]);
-
-  const navItems = [
-    { id: 'lamaran', label: 'Lacak Lamaran', icon: Briefcase },
-    { id: 'finance', label: 'Laporan Keuangan', icon: Wallet },
-    { id: 'interview', label: 'Interview AI', icon: Bot },
-    { id: 'capos', label: 'caPOS', icon: Zap, badge: hasCaposUnread },
+  const items = [
+    { key: 'lamaran', label: 'Lacak Lamaran', icon: <IconTray color="#1F2A44" size={18} /> },
+    { key: 'interview', label: 'Interview Assistant', icon: <IconInterview color="#6B5FA3" size={18} /> },
+    { key: 'finance', label: 'Keuangan', icon: <IconWallet color="#4C8B57" size={18} /> },
+    ...(isAdmin ? [{ key: 'capos', label: 'caPOS Analytics', icon: <IconWallet color="#B85C50" size={18} /> }] : []),
   ];
 
   return (
-    <div className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col h-screen sticky top-0">
-      {/* Brand Header */}
-      <div className="p-5 border-b border-slate-800 flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-sky-500/20">
-          JT
+    <div
+      className="fixed inset-0 z-[70] flex"
+      style={{ background: 'rgba(31,42,68,0.4)' }}
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="w-[260px] max-w-[80vw] h-full bg-surface shadow-2xl p-4.5 flex flex-col gap-1" style={{ animation: 'slideInLeft 0.18s ease' }}>
+        <div className="flex items-center justify-between px-2 pb-3.5 mb-1.5 border-b border-lineSoft">
+          <span className="flex items-center gap-2">
+            <img src="/icon-192.png" alt="Cortex" className="w-6 h-6 rounded-[6px]" />
+            <span className="font-display text-[15px] font-semibold text-ink">Cortex</span>
+          </span>
+          <button onClick={onClose} className="opacity-40 hover:opacity-80 text-base">
+            ✕
+          </button>
         </div>
-        <div>
-          <h1 className="font-bold text-slate-100 text-base leading-tight">Job Tracker</h1>
-          <p className="text-[11px] text-slate-400">Pro & Career Suite</p>
-        </div>
-      </div>
-
-      {/* Navigation Menu */}
-      <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.id;
-
-          return (
-            <button
-              key={item.id}
-              onClick={() => {
-                if (item.id === 'capos') setHasCaposUnread(false);
-                setActiveTab(item.id);
-              }}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                isActive
-                  ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20 shadow-sm'
-                  : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <Icon className={`w-4 h-4 ${isActive ? 'text-sky-400' : 'text-slate-400'}`} />
-                <span>{item.label}</span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                {/* Tanda Seru / Badge Notifikasi */}
-                {item.badge && (
-                  <span className="w-5 h-5 rounded-full bg-rose-500 text-white text-[11px] font-bold flex items-center justify-center animate-pulse">
-                    !
-                  </span>
-                )}
-                {isActive && <ChevronRight className="w-4 h-4 text-sky-400" />}
-              </div>
-            </button>
-          );
-        })}
-      </nav>
-
-      {/* User Footer & Logout */}
-      <div className="p-4 border-t border-slate-800 bg-slate-900/50">
-        <div className="flex items-center gap-3 mb-3 px-1">
-          <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-semibold text-slate-300">
-            {user?.email ? user.email.charAt(0).toUpperCase() : 'U'}
-          </div>
-          <div className="overflow-hidden">
-            <p className="text-xs font-medium text-slate-200 truncate">{user?.email || 'User'}</p>
-            <p className="text-[10px] text-slate-500">Terhubung</p>
-          </div>
-        </div>
-        <button
-          onClick={onLogout}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-slate-800/80 hover:bg-rose-500/10 hover:text-rose-400 hover:border-rose-500/30 text-slate-400 rounded-lg text-xs font-medium transition border border-slate-700/60"
-        >
-          <LogOut className="w-3.5 h-3.5" />
-          Keluar Aplikasi
-        </button>
+        {items.map((item) => (
+          <button
+            key={item.key}
+            onClick={() => onSelect(item.key)}
+            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-[10px] text-sm font-medium transition-colors text-left ${
+              activeApp === item.key ? 'bg-paper text-ink font-semibold' : 'text-inkSoft hover:bg-paper'
+            }`}
+          >
+            {item.icon}
+            {item.label}
+          </button>
+        ))}
       </div>
     </div>
   );
