@@ -99,6 +99,10 @@ create table if not exists public.profile (
   updated_at  timestamptz not null default now()
 );
 
+-- Pengaman: pastikan kolom ini ada walau tabel sudah kadung terbuat
+-- sebelumnya dari run yang lebih lama (aman dijalankan berkali-kali).
+alter table public.profile add column if not exists updated_at timestamptz not null default now();
+
 drop trigger if exists profile_set_updated_at on public.profile;
 create trigger profile_set_updated_at
   before update on public.profile
@@ -135,6 +139,8 @@ begin
   return new;
 end;
 $$;
+
+alter table public.applications add column if not exists updated_at timestamptz not null default now();
 
 drop trigger if exists applications_set_updated_at on public.applications;
 create trigger applications_set_updated_at
@@ -243,6 +249,8 @@ create table if not exists public.finance_accounts (
   updated_at      timestamptz not null default now()
 );
 
+alter table public.finance_accounts add column if not exists updated_at timestamptz not null default now();
+
 drop trigger if exists finance_accounts_set_updated_at on public.finance_accounts;
 create trigger finance_accounts_set_updated_at
   before update on public.finance_accounts
@@ -324,6 +332,8 @@ create table if not exists public.finance_allocations (
                     check (active_template in ('50-30-20', '40-30-20-10', 'custom')),
   updated_at      timestamptz not null default now()
 );
+
+alter table public.finance_allocations add column if not exists updated_at timestamptz not null default now();
 
 drop trigger if exists finance_allocations_set_updated_at on public.finance_allocations;
 create trigger finance_allocations_set_updated_at
@@ -421,6 +431,8 @@ end $$;
 
 create index if not exists profiles_subscription_tier_idx on public.profiles (subscription_tier);
 create index if not exists profiles_created_at_idx on public.profiles (created_at desc);
+
+alter table public.profiles add column if not exists updated_at timestamptz not null default now();
 
 drop trigger if exists profiles_set_updated_at on public.profiles;
 create trigger profiles_set_updated_at
@@ -581,6 +593,12 @@ create policy "Pengguna ubah profil sendiri"
 -- Kunci kolom sensitif (subscription_tier, is_admin, status) supaya
 -- pengguna biasa tidak bisa menaikkan tier / jadi admin sendiri lewat
 -- client, walau lolos policy UPDATE di atas.
+--
+-- Catatan: auth.uid() bernilai NULL kalau update dijalankan dari SQL
+-- Editor Supabase / lewat service role (bukan dari sesi login user biasa
+-- di aplikasi). Konteks itu sudah dianggap tepercaya (cuma pemilik project
+-- yang bisa akses SQL Editor), jadi dibolehkan lewat tanpa dianggap "bukan
+-- admin" — supaya perintah "jadikan admin" manual tidak ikut ke-revert.
 create or replace function public.protect_profile_privileged_columns()
 returns trigger
 language plpgsql
@@ -588,7 +606,7 @@ security definer
 set search_path = public
 as $$
 begin
-  if public.is_current_user_admin() then
+  if auth.uid() is null or public.is_current_user_admin() then
     return new;
   end if;
 

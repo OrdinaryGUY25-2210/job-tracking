@@ -1,10 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Users, DollarSign, Crown, Zap, ShieldCheck, 
   Search, Bell, ArrowUpRight, ArrowDownRight, RefreshCw, UserCheck 
 } from 'lucide-react';
+import {
+  ResponsiveContainer, BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip,
+  AreaChart, Area, Legend,
+} from 'recharts';
 import { useCapos } from '../../hooks/useCapos';
-import { TIER_PRICES } from '../../lib/capos';
+import { TIER_PRICES, buildSignupTrend } from '../../lib/capos';
 
 export default function CaposApp() {
   const { 
@@ -39,7 +43,14 @@ export default function CaposApp() {
     return matchesSearch && matchesTier;
   });
 
-  const maxTierCount = Math.max(freeCount, proCount, supremeCount, 1);
+  const tierChartData = useMemo(() => ([
+    { tier: 'Free', pengguna: freeCount, pendapatan: 0, fill: '#94a3b8' },
+    { tier: 'Pro', pengguna: proCount, pendapatan: proRevenue, fill: '#38bdf8' },
+    { tier: 'Supreme', pengguna: supremeCount, pendapatan: supremeRevenue, fill: '#fbbf24' },
+  ]), [freeCount, proCount, supremeCount, proRevenue, supremeRevenue]);
+
+  const signupTrend = useMemo(() => buildSignupTrend(users, 14), [users]);
+  const totalSignups14d = signupTrend.reduce((sum, d) => sum + d.pengguna, 0);
 
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto">
@@ -146,52 +157,58 @@ export default function CaposApp() {
         </div>
       </div>
 
-      {/* Bar Chart Visualisation */}
-      <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-6">
-        <h3 className="text-base font-semibold text-slate-100 mb-6">Analisis Perbandingan Tier (Jumlah User & Biaya)</h3>
-        
-        <div className="space-y-5">
-          {/* Free Bar */}
-          <div>
-            <div className="flex justify-between text-xs mb-1.5 font-medium">
-              <span className="text-slate-300">Free Tier ({freeCount} User)</span>
-              <span className="text-slate-400">Rp 0</span>
-            </div>
-            <div className="w-full bg-slate-900 rounded-full h-3 overflow-hidden">
-              <div 
-                className="bg-slate-500 h-full rounded-full transition-all duration-500" 
-                style={{ width: `${(freeCount / maxTierCount) * 100}%` }}
-              ></div>
-            </div>
-          </div>
+      {/* Bar Chart: Perbandingan Tier */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+        <div className="lg:col-span-2 bg-slate-800/80 border border-slate-700/80 rounded-xl p-6">
+          <h3 className="text-base font-semibold text-slate-100 mb-1">Perbandingan Tier</h3>
+          <p className="text-xs text-slate-400 mb-4">Jumlah pengguna per paket langganan</p>
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={tierChartData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+              <XAxis dataKey="tier" tick={{ fill: '#94a3b8', fontSize: 12 }} axisLine={{ stroke: '#334155' }} tickLine={false} />
+              <YAxis tick={{ fill: '#94a3b8', fontSize: 12 }} axisLine={false} tickLine={false} allowDecimals={false} />
+              <Tooltip
+                contentStyle={{ background: '#0f172a', border: '1px solid #334155', borderRadius: 8, fontSize: 12 }}
+                labelStyle={{ color: '#e2e8f0' }}
+                formatter={(value) => [`${value} pengguna`, 'Jumlah']}
+              />
+              <Bar dataKey="pengguna" radius={[6, 6, 0, 0]}>
+                {tierChartData.map((entry) => (
+                  <Cell key={entry.tier} fill={entry.fill} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
 
-          {/* Pro Bar */}
-          <div>
-            <div className="flex justify-between text-xs mb-1.5 font-medium">
-              <span className="text-sky-300">Pro Tier ({proCount} User)</span>
-              <span className="text-sky-400 font-semibold">{formatRupiah(proRevenue)}</span>
-            </div>
-            <div className="w-full bg-slate-900 rounded-full h-3 overflow-hidden">
-              <div 
-                className="bg-sky-500 h-full rounded-full transition-all duration-500" 
-                style={{ width: `${(proCount / maxTierCount) * 100}%` }}
-              ></div>
-            </div>
+        {/* Traffic / tren pendaftaran */}
+        <div className="lg:col-span-3 bg-slate-800/80 border border-slate-700/80 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="text-base font-semibold text-slate-100">Trafik Pendaftaran</h3>
+            <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1">
+              <ArrowUpRight className="w-3.5 h-3.5" /> {totalSignups14d} baru
+            </span>
           </div>
-
-          {/* Supreme Bar */}
-          <div>
-            <div className="flex justify-between text-xs mb-1.5 font-medium">
-              <span className="text-amber-300">Supreme Tier ({supremeCount} User)</span>
-              <span className="text-amber-400 font-semibold">{formatRupiah(supremeRevenue)}</span>
-            </div>
-            <div className="w-full bg-slate-900 rounded-full h-3 overflow-hidden">
-              <div 
-                className="bg-amber-500 h-full rounded-full transition-all duration-500" 
-                style={{ width: `${(supremeCount / maxTierCount) * 100}%` }}
-              ></div>
-            </div>
-          </div>
+          <p className="text-xs text-slate-400 mb-4">Pengguna baru per hari, 14 hari terakhir</p>
+          <ResponsiveContainer width="100%" height={220}>
+            <AreaChart data={signupTrend} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient id="signupFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#38bdf8" stopOpacity={0.4} />
+                  <stop offset="100%" stopColor="#38bdf8" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+              <XAxis dataKey="label" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={{ stroke: '#334155' }} tickLine={false} interval={1} />
+              <YAxis tick={{ fill: '#94a3b8', fontSize: 12 }} axisLine={false} tickLine={false} allowDecimals={false} width={24} />
+              <Tooltip
+                contentStyle={{ background: '#0f172a', border: '1px solid #334155', borderRadius: 8, fontSize: 12 }}
+                labelStyle={{ color: '#e2e8f0' }}
+                formatter={(value) => [`${value} pengguna`, 'Daftar baru']}
+              />
+              <Area type="monotone" dataKey="pengguna" stroke="#38bdf8" strokeWidth={2} fill="url(#signupFill)" />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
